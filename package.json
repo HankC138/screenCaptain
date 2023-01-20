@@ -35,28 +35,30 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
+    "pg": "^8.8.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "sequelize": "^6.28.0"
   },
-"plugins": [
-        [
-          "@electron-forge/plugin-webpack",
-          {
-            "mainConfig": "./webpack.main.config.js",
-            "renderer": {
-              "config": "./webpack.renderer.config.js",
-              "entryPoints": [
-                {
-                  "html": "./src/index.html",
-                  "js": "./src/renderer.js",
-                  "name": "main_window",
-                  "preload": {
-                    "js": "src/preload.js"
-                  }
-                }
-              ]
+  "plugins": [
+    [
+      "@electron-forge/plugin-webpack",
+      {
+        "mainConfig": "./webpack.main.config.js",
+        "renderer": {
+          "config": "./webpack.renderer.config.js",
+          "entryPoints": [
+            {
+              "html": "./src/index.html",
+              "js": "./src/renderer.js",
+              "name": "main_window",
+              "preload": {
+                "js": "src/preload.js"
+              }
             }
-          }
-        ]
-      ]
-    }
+          ]
+        }
+      }
+    ]
+  ]
+}
