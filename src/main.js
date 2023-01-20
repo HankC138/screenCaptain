@@ -1,6 +1,5 @@
 const { app, BrowserWindow, desktopCapturer, ipcMain } = require("electron");
 const { writeFile } = require("fs");
-const path = require("path");
 const crypto = require("crypto");
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -8,13 +7,6 @@ if (require("electron-squirrel-startup")) {
 }
 let mainWindow = null;
 const createWindow = () => {
-	ipcMain.handle("set-title", async (event, title) => {
-		const webContents = event.sender;
-		const win = BrowserWindow.fromWebContents(webContents);
-		win.setTitle(title);
-
-		return desktopCapturer.getSources({ types: ["window", "screen"] });
-	});
 
 	// Create the browser window.
 
@@ -37,6 +29,7 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
+
 app.on("ready", createWindow);
 
 // Quit when all windows are closed, except on macOS. There, it's common
