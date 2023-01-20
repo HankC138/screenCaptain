@@ -1,6 +1,7 @@
 const { app, BrowserWindow, desktopCapturer, ipcMain } = require("electron");
+const { writeFile } = require("fs");
 const path = require("path");
-
+const crypto = require("crypto");
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
 	app.quit();
@@ -68,10 +69,20 @@ ipcMain.on("screenshot-capture", (e, value) => {
 	desktopCapturer
 		.getSources({
 			types: ["screen"],
-			thumbnailSize: { width: 800, height: 600 },
+			thumbnailSize: { width: 1920, height: 1080 },
 		})
 		.then((sources) => {
-			let image = sources[0].thumbnail.toDataURL();
+			const screenPng = sources[0].thumbnail.toPNG();
+			const image = sources[0].thumbnail.toDataURL();
+			writeFile(
+				`${process.cwd()}/screenCaps/${crypto.randomUUID()}.png`,
+				screenPng,
+				(err) => {
+					if (err) throw err;
+					console.log("The file has been saved!");
+				}
+			);
+
 			mainWindow.webContents.send("screenshot-captured", image);
 		})
 		.catch(console.error);

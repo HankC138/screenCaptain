@@ -5,21 +5,25 @@ export default function App() {
   const [sources, setSources] = useState([]);
   const [imageData,setImageData] =useState()
 
-  const handleClick = (event) => {
+  const handleCaptureClick = (event) => {
     window.electronAPI.setTitle(title).then(setSources);
     window.sendCaptureCommand.sendCapture()
   };
 
+  const handleSaveClick = (event) =>{
+    console.log(event,'save event')
+  }
   useEffect(() => {
     window.mountListener.captureListen((event, value)=>{
       setImageData(value)
     })
     console.log(imageData)
-  }, [imageData])
+  }, [])
 
   return (
     <>
-      <button onClick={handleClick}>Capture</button>
+      <button onClick={handleCaptureClick}>Capture</button>
+      <button onClick={handleSaveClick}>Save</button>
       <img src={imageData}></img>
     </>
   );
