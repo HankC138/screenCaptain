@@ -1,3 +1,5 @@
+mediaCapture/
+
 # Logs
 logs
 *.log
@@ -88,4 +90,6 @@ typings/
 # Electron-Forge
 out/
 
-screenCaps/
+
+
+
