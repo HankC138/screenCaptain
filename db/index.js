@@ -35,6 +35,7 @@ const saveTags = async ({ mediaId, tags }) => {
 };
 
 const searchMediaTags = async (searchTerm) => {
+	console.log("did it hit?")
 	try {
 		const foundTag = await Tags.findAll({
 			where: { tagName: searchTerm },
@@ -42,7 +43,8 @@ const searchMediaTags = async (searchTerm) => {
 				model: Capture,
 			},
 		});
-		return foundTag[0].dataValues.captures;
+		console.log('search hit this')
+		return JSON.stringify(foundTag[0].dataValues.captures);
 	} catch (error) {
 		console.error(error);
 	}
