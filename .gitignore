@@ -1,3 +1,5 @@
+mediaCaptures/
+
 # Logs
 logs
 *.log
@@ -88,5 +90,6 @@ typings/
 # Electron-Forge
 out/
 
-mediaCaptures/*
+
+
 
