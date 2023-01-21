@@ -36,13 +36,7 @@ app.on("activate", () => {
 	}
 });
 
-ipcMain.on("set-title", (event, title) => {
-	const webContents = event.sender;
-	const win = BrowserWindow.fromWebContents(webContents);
-	win.setTitle(title);
-});
-
-ipcMain.on("media-capture", (event, value) => {
+ipcMain.on("media-capture", (_event, _value) => {
 	desktopCapturer
 		.getSources({
 			types: ["screen"],
