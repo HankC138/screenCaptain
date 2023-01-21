@@ -17,4 +17,4 @@ contextBridge.exposeInMainWorld("mediaCapture", {
 
 contextBridge.exposeInMainWorld("tagsSave", {
 	sendTags: ({mediaId, tags})=> ipcRenderer.send("tag-save", {mediaId, tags})
-})
+});
