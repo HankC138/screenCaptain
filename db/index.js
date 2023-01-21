@@ -1,13 +1,39 @@
 const db = require("./db");
-const ScreenCaps = require("./models/ScreenCaps");
+const Media = require("./models/Media");
 const Tags = require("./models/tags");
+const MediaTags = require("./models/MediaTags");
 
-Tags.belongsToMany(ScreenCaps, { through: "media_tags" });
-ScreenCaps.belongsToMany(Tags, { through: "media_tags" });
+// db.sync({ force: true });
 
-// db.sync();
+const saveMediaLocation = (location) => {
+	const screenCapEntry = Media.findOrCreate({
+		where: { location: location },
+	});
+	return screenCapEntry;
+};
+
+const saveTags = async ({ mediaId, tags }) => {
+	try {
+		tags.forEach(async (tag) => {
+			const tagEntry = await Tags.findOrCreate({
+				where: { tagName: tag },
+			});
+			await MediaTags.create({
+				tagId: tagEntry[0].dataValues.id,
+				mediaId: mediaId,
+			});
+		});
+		console.log(`${tags} have been saved!`);
+	} catch (error) {
+		console.error(error);
+	}
+};
+
 module.exports = {
 	db,
 	Tags,
-	ScreenCaps,
+	Media,
+	saveMediaLocation,
+	saveTags,
+	MediaTags,
 };
