@@ -42,7 +42,7 @@ ipcMain.on("set-title", (event, title) => {
 	win.setTitle(title);
 });
 
-ipcMain.on("media-capture", (e, value) => {
+ipcMain.on("media-capture", (event, value) => {
 	desktopCapturer
 		.getSources({
 			types: ["screen"],
