@@ -1,39 +1,62 @@
 const db = require("./db");
-const Media = require("./models/Media");
+const Capture = require("./models/Capture");
 const Tags = require("./models/tags");
-const MediaTags = require("./models/MediaTags");
 
-// db.sync({ force: true });
+Tags.belongsToMany(Capture, { through: "capturetags" });
+Capture.belongsToMany(Tags, { through: "capturetags" });
 
 const saveMediaLocation = (location) => {
-	const screenCapEntry = Media.findOrCreate({
+	const captureEntry = Capture.findOrCreate({
 		where: { location: location },
 	});
-	return screenCapEntry;
+	return captureEntry;
 };
 
 const saveTags = async ({ mediaId, tags }) => {
 	try {
-		tags.forEach(async (tag) => {
-			const tagEntry = await Tags.findOrCreate({
-				where: { tagName: tag },
-			});
-			await MediaTags.create({
-				tagId: tagEntry[0].dataValues.id,
-				mediaId: mediaId,
-			});
+		const foundMedia = await Capture.findByPk(mediaId);
+		tags.map(async (tag) => {
+			try {
+				const tagEntry = await Tags.findOne({
+					where: { tagName: tag },
+				});
+				if (tagEntry) return await foundMedia.setTags(tagEntry);
+				const newTag = await Tags.create({ tagName: tag });
+				await foundMedia.setTags(newTag);
+				return console.log(`${tag} WERE CREATED`);
+			} catch (error) {
+				console.error(error);
+			}
 		});
-		console.log(`${tags} have been saved!`);
+		console.log(`${tags} have been saved or found!`);
 	} catch (error) {
 		console.error(error);
 	}
 };
 
+const searchMediaTags = async (searchTerm) => {
+	console.log("did it hit?")
+	try {
+		const foundTag = await Tags.findAll({
+			where: { tagName: searchTerm },
+			include: {
+				model: Capture,
+			},
+		});
+		console.log('search hit this')
+		return JSON.stringify(foundTag[0].dataValues.captures);
+	} catch (error) {
+		console.error(error);
+	}
+	console.log(searchTerm, "tag searched");
+};
+
+// db.sync();
 module.exports = {
 	db,
 	Tags,
-	Media,
+	Capture,
 	saveMediaLocation,
 	saveTags,
-	MediaTags,
+	searchMediaTags,
 };
