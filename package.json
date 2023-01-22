@@ -34,10 +34,12 @@
     "style-loader": "^3.3.1"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.254.0",
     "electron-squirrel-startup": "^1.0.0",
     "pg": "^8.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "s3client": "^0.1.1",
     "sequelize": "^6.28.0"
   },
   "plugins": [

@@ -1,7 +1,13 @@
 const { app, BrowserWindow, desktopCapturer, ipcMain } = require("electron");
 const { writeFile } = require("fs");
 const crypto = require("crypto");
-const { saveMediaLocation, saveTags } = require("../db");
+const { saveMediaLocation, saveTags, searchMediaTags } = require("../db");
+
+import { S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+
+const REGION = "us-east-1";
+const s3Client = new S3Client({ region: REGION });
 
 if (require("electron-squirrel-startup")) {
 	app.quit();
@@ -45,12 +51,27 @@ ipcMain.on("media-capture", (_event, _value) => {
 		.then((sources) => {
 			const screenPng = sources[0].thumbnail.toPNG();
 			const image = sources[0].thumbnail.toDataURL();
-			const location = `${process.cwd()}/mediaCaptures/${crypto.randomUUID()}.png`;
-			writeFile(location, screenPng, (err) => {
-				if (err) throw err;
-				console.log("The file has been saved!");
-			});
-
+			const newUUID = crypto.randomUUID();
+			const fileName = `${newUUID}.png`;
+			const location = `https://mytestbucketformediacaptain.s3.us-east-1.amazonaws.com/${fileName}`
+			const bucketParams = {
+				Bucket: "mytestbucketformediacaptain",
+				Key: fileName,
+				Body: screenPng,
+			};
+			(async () => {
+				try {
+					await s3Client.send(new PutObjectCommand(bucketParams));
+					return console.log(
+						"Successfully uploaded object: " +
+							bucketParams.Bucket +
+							"/" +
+							bucketParams.Key
+					);
+				} catch (err) {
+					console.log("Error", err);
+				}
+			})();
 			saveMediaLocation(location)
 				.then((mediaCapture) => {
 					mainWindow.webContents.send(
@@ -67,4 +88,8 @@ ipcMain.on("media-capture", (_event, _value) => {
 
 ipcMain.on("tag-save", (e, value) => {
 	saveTags(value);
+});
+
+ipcMain.handle("media-tag-search", (e, value) => {
+	return searchMediaTags(value);
 });
