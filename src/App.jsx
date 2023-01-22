@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Button, Form, Input, } from 'antd';
+import '../node_modules/antd/dist/reset.css';
 
 export default function App() {
   const [mediaData,setMediaData] =useState()
@@ -22,8 +24,9 @@ export default function App() {
   };
 
   const onSubmitTag = (event) =>{
-    event.preventDefault()
+    // event.preventDefault()
     const formattedTag = currentTag.replace(/\s+/g, '-').toLowerCase()
+    console.log(tags,"tags")
     setTags([...tags,formattedTag])
     setCurrentTag([])
   }
@@ -53,7 +56,8 @@ export default function App() {
     setMediaData()
   }
 
-  const handleTagSave = () =>{
+  const handleTagSave = (event) =>{
+    console.log(event)
     window.tagsSave.sendTags({mediaId, tags})
     setTags([])
     setMediaData()
@@ -65,30 +69,31 @@ export default function App() {
   
   return (
     <>
-      <button disabled={mediaData} onClick={handleCaptureClick}>Window Capture</button>
-      <button disabled={mediaData} onClick={handleSnip}>Snip Capture</button>
-      <button onClick={handleTagSave}>Attach Tags to Media</button>
+      <Button type="primary" disabled={mediaData} onClick={handleCaptureClick}>Window Capture</Button>
+      <Button disabled={mediaData} onClick={handleSnip}>Snip Capture</Button>
+
+      <Button onClick={handleTagSave}>Attach Tags to Media</Button>
       
       <br/>
-      <form onSubmit={onSubmitTag}>
-      <input id="tagInput" type="text" placeholder="tag to add" value={currentTag} onChange={handleTagInputChange} pattern="^[-a-zA-Z0-9\s]+$"></input>
-      
-      <button type="submit" disabled={!currentTag.length}>Add Tag</button><br/>
+      <Form onFinish={onSubmitTag}>
+      <Form.Item id="tagInput" type="text" placeholder="tag to add" value={currentTag} onChange={handleTagInputChange} pattern="^[-a-zA-Z0-9\s]+$"><Input/></Form.Item>
+      <Form.Item>
+      <Button type="primary" htmlType="submit" disabled={!currentTag.length}>Add Tag</Button></Form.Item><br/>
       <label htmlFor="tagInput">No special chars 0-9,A-z only</label>
       <br/>
-      </form>
+      </Form>
       <br/>
 
-      <ul>{tags ? tags.map((tag, index)=> <li key={`tag ${index}`}><button onClick={() =>handleRemoveTag(index)}>X</button>{" "}{tag}</li>):null}</ul>
-
-      <input id="searchInput" type="text" placeholder="tag search" value={searchTerm} onChange={handleSearchInputChange}></input>
+      <ul>{tags ? tags.map((tag, index)=> <li key={`tag ${index}`}><Button onClick={() =>handleRemoveTag(index)}>X</Button>{" "}{tag}</li>):null}</ul>
+      <Form onFinish={handleSearch}>
+      <Form.Item id="searchInput" type="text" placeholder="tag search" value={searchTerm} onChange={handleSearchInputChange}><Input/></Form.Item>
       
-      <button onClick={handleSearch} disabled={!searchTerm}>Search</button>
+      <Form.Item><Button type="default" htmlType="submit" disabled={!searchTerm}>Search</Button></Form.Item></Form>
       <br/>
       <label htmlFor="searchInput">ex. tags-like-this</label>
 
       <img onClick={handleRemoveMedia} src={mediaData}></img>
-    {queryReturn ? queryReturn.map((result,index)=> <li key={result.location}><button onClick={() =>handleRemoveQueryCap(index)}>X</button><img src={result.location}/></li>) : null}
+    {queryReturn ? queryReturn.map((result,index)=> <li key={result.location}><Button onClick={() =>handleRemoveQueryCap(index)}>X</Button><img src={result.location}/></li>) : null}
     </>
   );
 }
