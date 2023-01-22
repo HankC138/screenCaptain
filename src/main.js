@@ -66,14 +66,14 @@ ipcMain.on("media-capture", (_event, _value) => {
 		});
 });
 
-// ipcMain.on("snip-capture", (event, value) => {
-// 	const child = new BrowserWindow({ parent: mainWindow, modal: false, show: true })
-// child.loadURL(SNIP_WINDOW_WEBPACK_ENTRY)
-// child.webContents.openDevTools();
-// child.once('ready-to-show', () => {
+ipcMain.on("snip-capture", (event, value) => {
+	const child = new BrowserWindow({ parent: mainWindow, modal: false, show: true })
+child.loadURL(SNIP_WINDOW_WEBPACK_ENTRY)
+child.webContents.openDevTools();
+child.once('ready-to-show', () => {
 	
-//   child.show()
-// })})
+  child.show()
+})})
 
 
 const sourceSelectedNowCap = (source) => {

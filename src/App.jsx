@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Image, Input, Layout, Space,Tag,Spin } from 'antd';
+import { Button, Image, Input, Layout, Space,Tag,Spin,Form } from 'antd';
 import { CameraOutlined, CloseOutlined,CloudUploadOutlined,LoadingOutlined} from "@ant-design/icons";
 import '../node_modules/antd/dist/reset.css';
 import { Content } from "antd/es/layout/layout";
@@ -8,7 +8,7 @@ export default function App() {
   const [mediaData,setMediaData] =useState()
   const [mediaId, setMediaId] = useState()
   const [tags, setTags] = useState([])
-  const [currentTag, setCurrentTag] = useState([])
+  const [currentTag, setCurrentTag] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [queryReturn, setQueryReturn] = useState([])
   const [noTagsFound, setNoTagsFound] = useState(false)
@@ -45,7 +45,8 @@ export default function App() {
     const formattedTag = currentTag.replace(/\s+/g, '-').toLowerCase()
     console.log(tags,"tags")
     setTags([...tags,formattedTag])
-    setCurrentTag([])
+    setCurrentTag("")
+    form.resetFields()
   }
 
   const handleTagInputChange = (event) =>{
@@ -88,7 +89,8 @@ export default function App() {
   const handleSnip = () => {
     window.snipCapture.takeSnip()
   }
-  
+  const [form] = Form.useForm();
+
   return (
     <>
     <Layout style={{backgroundColor:"white"}}>
@@ -99,16 +101,33 @@ export default function App() {
       <Button onClick={handleTagSave} icon={<CloudUploadOutlined />}>Attach Tags to Media</Button>
       </span>
       </Space>
+    <br/>
+      <Form form={form} onFinish={onSubmitTag} name="tag">
+      <Input.Group compact>
+      <Form.Item
+        name="tag"
+        rules={[
+          {
+            required: true,
+            pattern: new RegExp(
+              /^[-a-zA-Z0-9\s]+$/
+            ),
+            message: "No special characters"
+          }
+        ]}
+      >
+     
+        <Input value={currentTag} onChange={handleTagInputChange} placeholder="tags-to-add" />
+      </Form.Item>
+      <Form.Item>
+      <Button type="primary" htmlType="submit" disabled={!currentTag.length}>Add Tag</Button></Form.Item></Input.Group>
+    </Form>
+
       <Content>
-      <br/>
-      <Input.Search id="tagInput" type="text" placeholder="tag-here" value={currentTag} enterButton="Add Tag"  onChange={handleTagInputChange} onSearch={onSubmitTag} pattern="^[-a-zA-Z0-9\s]+$"></Input.Search>
-      <label htmlFor="tagInput">No special chars 0-9,A-z only</label>
-      <br/>
-      <br/>
 
       <ul>{tags ? tags.map((tag, index)=><Tag key={`tag ${index}`} icon={<CloseOutlined/>} color={tagColors[index]} onClick={()=>handleRemoveTag(index)}>{tag}</Tag>):null}</ul>
       
-      <Input.Search id="searchInput" type="text" placeholder="Search Tags" allowClear value={searchTerm} onSearch={handleSearch} onChange={handleSearchInputChange}></Input.Search>
+      <Input.Search enterButton id="searchInput" type="text" placeholder="Search Tags" allowClear value={searchTerm} onSearch={handleSearch} onChange={handleSearchInputChange}></Input.Search>
       <label htmlFor="searchInput">ex. tags-like-this</label><br/>
 
       {loading ? null : <Image preview={false} onClick={handleRemoveMedia} src={mediaData}></Image>}
