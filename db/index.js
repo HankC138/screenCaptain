@@ -43,8 +43,8 @@ const searchMediaTags = async (searchTerm) => {
 			},
 		});
 		console.log('search hit this')
-		const retrievedData = JSON.stringify(foundTag[0].dataValues.captures);
-		return retrievedData
+		if(foundTag.length) return JSON.stringify(foundTag[0].dataValues.captures);
+		return `[{"NOTHING":"NOTHING"}]`
 	} catch (error) {
 		console.error(error);
 	}
