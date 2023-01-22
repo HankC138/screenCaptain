@@ -58,11 +58,15 @@ export default function App() {
     setTags([])
     setMediaData()
     }
+
+  const handleSnip = () => {
+    window.snipCapture.takeSnip()
+  }
   
   return (
     <>
-      <button disabled={mediaData} onClick={handleCaptureClick}>Capture</button>
-      
+      <button disabled={mediaData} onClick={handleCaptureClick}>Window Capture</button>
+      <button disabled={mediaData} onClick={handleSnip}>Snip Capture</button>
       <button onClick={handleTagSave}>Attach Tags to Media</button>
       
       <br/>

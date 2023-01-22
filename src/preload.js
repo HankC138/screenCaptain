@@ -23,6 +23,6 @@ contextBridge.exposeInMainWorld("search", {
 	mediaTagSearch: (searchTerm)=> ipcRenderer.invoke("media-tag-search", searchTerm)
 });
 
-// contextBridge.exposeInMainWorld("sourceSelect", {
-// 	selectSource: (source)=> ipcRenderer.send("source-selected", source)
-// });
+contextBridge.exposeInMainWorld("snipCapture", {
+	takeSnip: ()=> ipcRenderer.send("snip-capture", {})
+});
