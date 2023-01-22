@@ -22,3 +22,7 @@ contextBridge.exposeInMainWorld("tagsSave", {
 contextBridge.exposeInMainWorld("search", {
 	mediaTagSearch: (searchTerm)=> ipcRenderer.invoke("media-tag-search", searchTerm)
 });
+
+contextBridge.exposeInMainWorld("snipCapture", {
+	takeSnip: ()=> ipcRenderer.send("snip-capture", {})
+});
