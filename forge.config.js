@@ -41,7 +41,7 @@ module.exports = {
               js: './src/snipRender/index.js',
               name: 'snip_window',
               preload: {
-                js: './src/preload.js',
+                js: './src/snipRender/snipperPreload.js',
               },
             },
           ],

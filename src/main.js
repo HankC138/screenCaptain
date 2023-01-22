@@ -66,16 +66,6 @@ ipcMain.on("media-capture", (_event, _value) => {
 		});
 });
 
-ipcMain.on("snip-capture", (event, value) => {
-	const child = new BrowserWindow({ parent: mainWindow, modal: false, show: true })
-child.loadURL(SNIP_WINDOW_WEBPACK_ENTRY)
-child.webContents.openDevTools();
-child.once('ready-to-show', () => {
-	
-  child.show()
-})})
-
-
 const sourceSelectedNowCap = (source) => {
 	const screenPng = source.thumbnail.toPNG();
 	const image = source.thumbnail.toDataURL();
@@ -87,34 +77,51 @@ const sourceSelectedNowCap = (source) => {
 		Key: fileName,
 		Body: screenPng,
 	};
-
+	
 	(async () => {
 		try {
 			await s3Client.send(new PutObjectCommand(bucketParams));
 			return console.log(
 				"Successfully uploaded object: " +
-					bucketParams.Bucket +
+				bucketParams.Bucket +
 					"/" +
 					bucketParams.Key
-			);
-		} catch (err) {
-			console.log("Error", err);
-		}
-	})();
+					);
+				} catch (err) {
+					console.log("Error", err);
+				}
+			})();
+			
+			saveMediaLocation(location)
+			.then((mediaCapture) => {
+				mainWindow.webContents.send("update-tags", mediaCapture[0].toJSON().id);
+			})
+			.catch(console.error);
+			
+			mainWindow.webContents.send("media-captured", image);
+		};
+		
+		ipcMain.on("tag-save", (e, value) => {
+			saveTags(value);
+		});
+		
+		ipcMain.handle("media-tag-search", (e, value) => {
+			return searchMediaTags(value);
+		});
+		
+		ipcMain.on("snip-capture", (event, value) => {
+			const child = new BrowserWindow({ parent: mainWindow, modal: false, show: true,
+				webPreferences: {
+					nodeIntegration: true,
+					preload: SNIP_WINDOW_PRELOAD_WEBPACK_ENTRY,
+				}, })
+		child.loadURL(SNIP_WINDOW_WEBPACK_ENTRY)
+		child.webContents.openDevTools();
+		child.once('ready-to-show', () => {
+			
+		  child.show()
+		})})
 
-	saveMediaLocation(location)
-		.then((mediaCapture) => {
-			mainWindow.webContents.send("update-tags", mediaCapture[0].toJSON().id);
+		ipcMain.on("snipped", (event,value) => {
+			console.log("snipped fired")
 		})
-		.catch(console.error);
-
-	mainWindow.webContents.send("media-captured", image);
-};
-
-ipcMain.on("tag-save", (e, value) => {
-	saveTags(value);
-});
-
-ipcMain.handle("media-tag-search", (e, value) => {
-	return searchMediaTags(value);
-});
