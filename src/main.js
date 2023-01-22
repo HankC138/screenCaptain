@@ -1,5 +1,10 @@
-const { app, BrowserWindow, desktopCapturer, ipcMain } = require("electron");
-const { writeFile } = require("fs");
+const {
+	app,
+	BrowserWindow,
+	desktopCapturer,
+	ipcMain,
+	Menu,
+} = require("electron");
 const crypto = require("crypto");
 const { saveMediaLocation, saveTags, searchMediaTags } = require("../db");
 
@@ -45,46 +50,57 @@ app.on("activate", () => {
 ipcMain.on("media-capture", (_event, _value) => {
 	desktopCapturer
 		.getSources({
-			types: ["screen"],
+			types: ["screen", "window"],
 			thumbnailSize: { width: 1920, height: 1080 },
 		})
 		.then((sources) => {
-			const screenPng = sources[0].thumbnail.toPNG();
-			const image = sources[0].thumbnail.toDataURL();
-			const newUUID = crypto.randomUUID();
-			const fileName = `${newUUID}.png`;
-			const location = `https://mytestbucketformediacaptain.s3.us-east-1.amazonaws.com/${fileName}`
-			const bucketParams = {
-				Bucket: "mytestbucketformediacaptain",
-				Key: fileName,
-				Body: screenPng,
-			};
-			(async () => {
-				try {
-					await s3Client.send(new PutObjectCommand(bucketParams));
-					return console.log(
-						"Successfully uploaded object: " +
-							bucketParams.Bucket +
-							"/" +
-							bucketParams.Key
-					);
-				} catch (err) {
-					console.log("Error", err);
-				}
-			})();
-			saveMediaLocation(location)
-				.then((mediaCapture) => {
-					mainWindow.webContents.send(
-						"update-tags",
-						mediaCapture[0].toJSON().id
-					);
+			const captureOptions = Menu.buildFromTemplate(
+				sources.map((source) => {
+					return {
+						label: source.name,
+						click: () => sourceSelectedNowCap(source),
+					};
 				})
-				.catch(console.error);
+			);
+			captureOptions.popup();
+		});
+});
 
-			mainWindow.webContents.send("media-captured", image);
+// ipcMain.on("source-selected",
+const sourceSelectedNowCap = (source) => {
+	const screenPng = source.thumbnail.toPNG();
+	const image = source.thumbnail.toDataURL();
+	const newUUID = crypto.randomUUID();
+	const fileName = `${newUUID}.png`;
+	const location = `https://mytestbucketformediacaptain.s3.us-east-1.amazonaws.com/${fileName}`;
+	const bucketParams = {
+		Bucket: "mytestbucketformediacaptain",
+		Key: fileName,
+		Body: screenPng,
+	};
+
+	(async () => {
+		try {
+			await s3Client.send(new PutObjectCommand(bucketParams));
+			return console.log(
+				"Successfully uploaded object: " +
+					bucketParams.Bucket +
+					"/" +
+					bucketParams.Key
+			);
+		} catch (err) {
+			console.log("Error", err);
+		}
+	})();
+
+	saveMediaLocation(location)
+		.then((mediaCapture) => {
+			mainWindow.webContents.send("update-tags", mediaCapture[0].toJSON().id);
 		})
 		.catch(console.error);
-});
+
+	mainWindow.webContents.send("media-captured", image);
+};
 
 ipcMain.on("tag-save", (e, value) => {
 	saveTags(value);
