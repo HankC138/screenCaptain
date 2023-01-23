@@ -6,7 +6,6 @@ const {
 	Menu,
 	screen,
 } = require("electron");
-const { writeFile } = require("fs");
 const crypto = require("crypto");
 const { saveMediaLocation, saveTags, searchMediaTags } = require("../db");
 
@@ -68,8 +67,10 @@ ipcMain.on("media-capture", (_event, _value) => {
 		});
 });
 
-const sourceSelectedNowCap = (source) => {
-	const screenPng = source.thumbnail.toPNG();
+const sourceSelectedNowCap = (source, coordinates) => {
+	const screenPng = coordinates
+		? source.thumbnail.crop(coordinates).toPNG()
+		: source.thumbnail.toPNG();
 	const image = source.thumbnail.toDataURL();
 	const newUUID = crypto.randomUUID();
 	const fileName = `${newUUID}.png`;
@@ -103,57 +104,60 @@ const sourceSelectedNowCap = (source) => {
 	mainWindow.webContents.send("media-captured", image);
 };
 
-ipcMain.on("tag-save", (e, value) => {
+ipcMain.on("tag-save", (event, value) => {
 	saveTags(value);
 });
 
-ipcMain.handle("media-tag-search", (e, value) => {
+ipcMain.handle("media-tag-search", (event, value) => {
 	return searchMediaTags(value);
 });
 
 let snipWindow = null;
 ipcMain.on("snip-capture", (event, value) => {
+	const { size } = screen.getPrimaryDisplay();
 	snipWindow = new BrowserWindow({
 		transparent: true,
+		width: size.width,
+		height: size.height,
 		webPreferences: {
 			nodeIntegration: true,
 			preload: SNIP_WINDOW_PRELOAD_WEBPACK_ENTRY,
 		},
 	});
 	snipWindow.loadURL(SNIP_WINDOW_WEBPACK_ENTRY);
-	// snipWindow.webContents.openDevTools();
 
 	snipWindow.once("ready-to-show", () => {
 		snipWindow.show();
-		mainWindow.hide()
-		const { size } = screen.getPrimaryDisplay();
+		mainWindow.hide();
 		snipWindow.webContents.send("snipSize", size);
 	});
-	snipWindow.on("close", () => {
+	snipWindow.on("close", (event) => {
 		snipWindow = null;
 		mainWindow.show();
 	});
 });
 
-ipcMain.on("snip-cap", (event, {width, height, x, y}) => {
-	// const bounds = snipWindow.getBounds()
-	
-	console.log({width,height,x,y}, "snipcap");
+ipcMain.on("snip-cap", (event, { width, height, x, y }) => {
+	snipWindow.hide();
+	setTimeout(()=> handleSnipCap({ width, height, x, y }),100)
+});
+const handleSnipCap = ({ width, height, x, y }) => {
+	const parsedW = parseInt(width, 10);
+	const parsedH = parseInt(height, 10);
 	desktopCapturer
 		.getSources({
 			types: ["screen"],
 			thumbnailSize: { width: 1920, height: 1080 },
 		})
 		.then((sources) => {
-			const snipPng = sources[0].thumbnail.crop({x:x,y:y,width:parseInt(width),height:parseInt(height)}).toPNG();
-			writeFile(
-				`${process.cwd()}/src/snipRender/snipCaptures/${crypto.randomUUID()}.png`,
-				snipPng,
-				(error) => {
-					if (error) throw error;
-					console.log("The file has been saved!");
-				}
-			);
-		}).catch(console.error);
-		
+			const coordinates = { x: x, y: y, width: parsedW, height: parsedH };
+			const source = sources[0];
+			sourceSelectedNowCap(source, coordinates);
+		})
+		.catch(console.error);
+	setTimeout(() => snipWindow.close(), 100);
+};
+
+ipcMain.on("close-snip", (_event, _value) => {
+	setTimeout(() => snipWindow.close(), 100);
 });

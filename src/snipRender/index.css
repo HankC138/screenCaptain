@@ -1,3 +1,4 @@
 .snipControl{
-    border:solid 1px lime;
+    border:dashed 1px lime;
+    border-radius: 10px;
 }

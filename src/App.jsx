@@ -59,9 +59,11 @@ export default function App() {
     setQueryReturn([])
     setNoTagsFound(false)
     const formattedSearch = searchTerm.replace(/\s+/g, '-').toLowerCase()
+    setSearchTerm("")
     const searchData = await window.tagAPI.mediaTagSearch(formattedSearch)
     const searchReturn = JSON.parse(searchData)
     if(searchReturn[0].NOTHING) return setNoTagsFound(true)
+    
     return setQueryReturn(searchReturn)
   }
 
@@ -130,6 +132,7 @@ export default function App() {
 
       {loading ? null : <Image preview={false} onClick={handleRemoveMedia} src={mediaData}></Image>}
       <Spin spinning={loading} indicator={<LoadingOutlined style={{ fontSize: 100 }} spin/>}/>
+      {queryReturn.length ? <h3>Search Results:</h3> : null}
     {queryReturn ? queryReturn.map((result,index)=> <span key={result.location}><Button shape="circle" icon={<CloseOutlined/>} onClick={() =>handleRemoveQueryCap(index)}></Button><Image src={result.location}/></span>) : null}
     {noTagsFound ? <div>NO TAGS FOUND</div> : null}
     </Content>

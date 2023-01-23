@@ -1,3 +1,5 @@
+import { CameraFilled, CloseCircleFilled } from '@ant-design/icons'
+import { Button, Space } from 'antd'
 import React, { useEffect, useState } from 'react'
 import {Rnd} from 'react-rnd'
 import { Snipper } from './Snipper.jsx'
@@ -5,19 +7,25 @@ export default function SnipWindow() {
   const [screenSize, setScreenSize] = useState({width:0, height:0, x:0, y:0})
   useEffect(()=>{
     window.snipAPI.onSnipLoad((event,{width, height}) => {
-      setScreenSize({width,height,x:width/2 -250,y:height/2 -250})
+      setScreenSize({width:500,height:500,x:(width/2) -250,y:(height/2) -250})
     })
 
   },[])
+  const style = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
   const handleSnip = () => {
-    console.log(screenSize)
     window.snipAPI.snipCap(screenSize)
   }
   const cancelSnip = () => {
-    console.log("cancel, clicked")
+    window.snipAPI.snipCancel()
   }
   return (
     <Rnd className="snipControl" 
+    style={style}
      size={{ width: screenSize.width, height: screenSize.height }}
     position={{ x: screenSize.x, y: screenSize.y }}
     onDragStop={(event, delta) => {
@@ -27,13 +35,12 @@ export default function SnipWindow() {
     setScreenSize({
         width: ref.style.width,
         height: ref.style.height,
-        x : position.x,
-        y : position.y
+        ...position
     });
 }}
 bounds={'window'}>
-   <span><button onClick={handleSnip}>SnipWindow</button>
-   <button onClick={cancelSnip}>Cancel</button></span>
+   <span><Space><Button icon={<CameraFilled/>} onClick={handleSnip}></Button>
+   <Button onClick={cancelSnip} icon={<CloseCircleFilled/>}></Button></Space></span>
     <Snipper/> </Rnd>
   )
 }
