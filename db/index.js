@@ -2,9 +2,11 @@ const db = require("./db");
 const Capture = require("./models/Capture");
 const Tags = require("./models/tags");
 
+//associations between models
 Tags.belongsToMany(Capture, { through: "capturetags" });
 Capture.belongsToMany(Tags, { through: "capturetags" });
 
+//this creates a new capture entry with it's location
 const saveMediaLocation = (location) => {
 	const captureEntry = Capture.findOrCreate({
 		where: { location: location },
@@ -12,6 +14,7 @@ const saveMediaLocation = (location) => {
 	return captureEntry;
 };
 
+//finds a cap and attachs tags to it by finding existing or creating new tags
 const saveTags = async ({ mediaId, tags }) => {
 	try {
 		const foundMedia = await Capture.findByPk(mediaId);
@@ -34,6 +37,7 @@ const saveTags = async ({ mediaId, tags }) => {
 	}
 };
 
+//query database for tags and their associated caps
 const searchMediaTags = async (searchTerm) => {
 	try {
 		const foundTag = await Tags.findAll({

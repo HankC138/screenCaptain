@@ -18,6 +18,8 @@ const s3Client = new S3Client({ region: REGION });
 if (require("electron-squirrel-startup")) {
 	app.quit();
 }
+
+//create main app window
 let mainWindow = null;
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
@@ -29,13 +31,16 @@ const createWindow = () => {
 		},
 	});
 
+	//load webpack config entry for main window found in forge.config
 	mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
+	//enable dev tools on open
 	mainWindow.webContents.openDevTools();
 };
 
 app.on("ready", createWindow);
 
+//darwin is specific to macOS
 app.on("window-all-closed", () => {
 	if (process.platform !== "darwin") {
 		app.quit();
@@ -48,6 +53,7 @@ app.on("activate", () => {
 	}
 });
 
+//the handling of a media capture event, and building a menu to select source to capture then forward it the the save function
 ipcMain.on("media-capture", (_event, _value) => {
 	desktopCapturer
 		.getSources({
@@ -67,6 +73,7 @@ ipcMain.on("media-capture", (_event, _value) => {
 		});
 });
 
+//after a source is selected the capture itself is saved, and based on the existence of coordinates or not we conditionally handle the capture call
 const sourceSelectedNowCap = (source, coordinates) => {
 	const screenPng = coordinates
 		? source.thumbnail.crop(coordinates).toPNG()
@@ -80,7 +87,7 @@ const sourceSelectedNowCap = (source, coordinates) => {
 		Key: fileName,
 		Body: screenPng,
 	};
-
+//save to s3 cloud storage
 	(async () => {
 		try {
 			await s3Client.send(new PutObjectCommand(bucketParams));
@@ -94,24 +101,27 @@ const sourceSelectedNowCap = (source, coordinates) => {
 			console.log("Error", err);
 		}
 	})();
-
+	//database save call
 	saveMediaLocation(location)
 		.then((mediaCapture) => {
 			mainWindow.webContents.send("update-tags", mediaCapture[0].toJSON().id);
 		})
 		.catch(console.error);
-
+		//send the resulting cap back to front ot be displayed
 	mainWindow.webContents.send("media-captured", image);
 };
 
+//listen for tag save call
 ipcMain.on("tag-save", (event, value) => {
 	saveTags(value);
 });
 
+//handling the tag search
 ipcMain.handle("media-tag-search", (event, value) => {
 	return searchMediaTags(value);
 });
 
+//setting up snip window 
 let snipWindow = null;
 ipcMain.on("snip-capture", (event, value) => {
 	const { size } = screen.getPrimaryDisplay();
@@ -124,6 +134,7 @@ ipcMain.on("snip-capture", (event, value) => {
 			preload: SNIP_WINDOW_PRELOAD_WEBPACK_ENTRY,
 		},
 	});
+	//load separate renderer process from forge config 
 	snipWindow.loadURL(SNIP_WINDOW_WEBPACK_ENTRY);
 
 	snipWindow.once("ready-to-show", () => {
@@ -137,10 +148,13 @@ ipcMain.on("snip-capture", (event, value) => {
 	});
 });
 
+//listening for snip event from snip window
 ipcMain.on("snip-cap", (event, { width, height, x, y }) => {
 	snipWindow.hide();
 	setTimeout(()=> handleSnipCap({ width, height, x, y }),100)
 });
+
+//formatting the snip applying sizing
 const handleSnipCap = ({ width, height, x, y }) => {
 	const parsedW = parseInt(width, 10);
 	const parsedH = parseInt(height, 10);
@@ -158,6 +172,7 @@ const handleSnipCap = ({ width, height, x, y }) => {
 	setTimeout(() => snipWindow.close(), 100);
 };
 
+//closing the snip window
 ipcMain.on("close-snip", (_event, _value) => {
 	setTimeout(() => snipWindow.close(), 100);
 });
