@@ -42,7 +42,6 @@ const searchMediaTags = async (searchTerm) => {
 				model: Capture,
 			},
 		});
-		console.log('search hit this')
 		if(foundTag.length) return JSON.stringify(foundTag[0].dataValues.captures);
 		return `[{"NOTHING":"NOTHING"}]`
 	} catch (error) {

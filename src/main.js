@@ -4,7 +4,9 @@ const {
 	desktopCapturer,
 	ipcMain,
 	Menu,
+	screen,
 } = require("electron");
+const { writeFile } = require("fs");
 const crypto = require("crypto");
 const { saveMediaLocation, saveTags, searchMediaTags } = require("../db");
 
@@ -66,16 +68,6 @@ ipcMain.on("media-capture", (_event, _value) => {
 		});
 });
 
-// ipcMain.on("snip-capture", (event, value) => {
-// 	const child = new BrowserWindow({ parent: mainWindow, modal: false, show: true })
-// child.loadURL(SNIP_WINDOW_WEBPACK_ENTRY)
-// child.webContents.openDevTools();
-// child.once('ready-to-show', () => {
-	
-//   child.show()
-// })})
-
-
 const sourceSelectedNowCap = (source) => {
 	const screenPng = source.thumbnail.toPNG();
 	const image = source.thumbnail.toDataURL();
@@ -117,4 +109,51 @@ ipcMain.on("tag-save", (e, value) => {
 
 ipcMain.handle("media-tag-search", (e, value) => {
 	return searchMediaTags(value);
+});
+
+let snipWindow = null;
+ipcMain.on("snip-capture", (event, value) => {
+	snipWindow = new BrowserWindow({
+		transparent: true,
+		webPreferences: {
+			nodeIntegration: true,
+			preload: SNIP_WINDOW_PRELOAD_WEBPACK_ENTRY,
+		},
+	});
+	snipWindow.loadURL(SNIP_WINDOW_WEBPACK_ENTRY);
+	// snipWindow.webContents.openDevTools();
+
+	snipWindow.once("ready-to-show", () => {
+		snipWindow.show();
+		mainWindow.hide()
+		const { size } = screen.getPrimaryDisplay();
+		snipWindow.webContents.send("snipSize", size);
+	});
+	snipWindow.on("close", () => {
+		snipWindow = null;
+		mainWindow.show();
+	});
+});
+
+ipcMain.on("snip-cap", (event, {width, height, x, y}) => {
+	// const bounds = snipWindow.getBounds()
+	
+	console.log({width,height,x,y}, "snipcap");
+	desktopCapturer
+		.getSources({
+			types: ["screen"],
+			thumbnailSize: { width: 1920, height: 1080 },
+		})
+		.then((sources) => {
+			const snipPng = sources[0].thumbnail.crop({x:x,y:y,width:parseInt(width),height:parseInt(height)}).toPNG();
+			writeFile(
+				`${process.cwd()}/src/snipRender/snipCaptures/${crypto.randomUUID()}.png`,
+				snipPng,
+				(error) => {
+					if (error) throw error;
+					console.log("The file has been saved!");
+				}
+			);
+		}).catch(console.error);
+		
 });
