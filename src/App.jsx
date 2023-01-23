@@ -38,7 +38,6 @@ export default function App() {
 
   const handleCaptureClick = () => {
     window.capAPI.sendMediaCap()
-    console.log(window.capAPI)
     setLoading(true)
   };
 

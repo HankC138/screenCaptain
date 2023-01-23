@@ -1,5 +1,9 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, screen } = require("electron");
 
 contextBridge.exposeInMainWorld("snipAPI", {
-	snipCap: () => ipcRenderer.send("snipped", {})
+    onSnipLoad: (callback)=> ipcRenderer.on("snipSize", callback),
+    snipCap: (snipArea) => {
+        ipcRenderer.send("snip-cap", snipArea),
+        ipcRenderer.send('close')
+    }
 })
